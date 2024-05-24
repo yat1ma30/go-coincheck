@@ -1,12 +1,13 @@
 # go-coincheck
 
-Coincheck API
+Coincheck API, connect websocket
 
 ## Description
 
 go-coincheck is a go client library for [Coincheck API](https://coincheck.com/languages/en).
 
-Connecting websocket, read data[trads, orderbook]. as of 2019/06.
+Connecting websocket, read data[trads, orderbook]. as of 2024/05.  
+Use [official package](https://github.com/coincheckjp/coincheck-go) for REST.
 
 ## Installation
 
@@ -33,12 +34,21 @@ func main() {
 
 	c.Subscribe(products, channels)
 
-	go c.Connect()
+	ctx := context.Background()
+	go c.Connect(ctx)
 
 	for {
 		select {
 		case v := <-c.Result:
 			fmt.Printf("%+v\n", string(v))
+
+			// OR
+			var s Orderbook
+			if err := json.Unmarshal(v, &s); err != nil {
+				t.Fatal(err)
+			}
+
+			fmt.Printf("%+v\n", s)
 		}
 	}
 }
