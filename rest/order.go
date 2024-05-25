@@ -24,12 +24,12 @@ type RequestForOrder struct {
 
 type ResponseForOrder struct {
 	ID           int       `json:"id"`
+	Pair         string    `json:"pair"`
 	Rate         string    `json:"rate"`
 	Amount       string    `json:"amount"`
 	OrderType    string    `json:"order_type"`
 	TimeInForce  string    `json:"time_in_force"`
 	StopLossRate string    `json:"stop_loss_rate,omitempty"`
-	Pair         string    `json:"pair"`
 	CreatedAt    time.Time `json:"created_at"`
 }
 
@@ -78,12 +78,111 @@ func (a Order) Cancel(id string) string {
 	return fmt.Sprintf("%d", result)
 }
 
+type ResponseForOpenOrder struct {
+	ID                     int       `json:"id"`
+	Pair                   string    `json:"pair"`
+	Rate                   float64   `json:"rate"`           // nullの場合があるためポインタ型を使用
+	PendingAmount          string    `json:"pending_amount"` // nullの場合があるためポインタ型を使用
+	OrderType              string    `json:"order_type"`
+	PendingMarketBuyAmount string    `json:"pending_market_buy_amount"` // nullの場合があるためポインタ型を使用
+	StopLossRate           string    `json:"stop_loss_rate"`            // nullの場合があるためポインタ型を使用
+	CreatedAt              time.Time `json:"created_at"`
+}
+
 // List charges filtered by params
-func (a Order) Opens() string {
-	return a.client.Request("GET", "api/exchange/orders/opens", "")
+func (a Order) Opens() ([]ResponseForOrder, error) {
+	s := a.client.Request("GET", "api/exchange/orders/opens", "")
+	isSuccess, err := jsonparser.GetBoolean([]byte(s), "success")
+	if err != nil {
+		return nil, err
+	}
+	if !isSuccess {
+		errs, _ := jsonparser.GetString([]byte(s), "error")
+		return nil, fmt.Errorf("failed to get open orders, error: %s", errs)
+	}
+
+	data, _, _, err := jsonparser.Get([]byte(s), "orders")
+	if err != nil {
+		return nil, err
+	}
+
+	var res []ResponseForOrder
+	if err := json.Unmarshal(data, &res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+type ResponseForCancelStatus struct {
+	ID        int       `json:"id"`
+	Cancel    bool      `json:"cancel"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// CancelStatus returns the status of the order cancellation.
+func (a Order) CancelStatus(id string) (*ResponseForCancelStatus, error) {
+	s := a.client.Request("GET", fmt.Sprintf("api/exchange/orders/cancel_status?id=%s", id), "")
+	isSuccess, err := jsonparser.GetBoolean([]byte(s), "success")
+	if err != nil {
+		return nil, err
+	}
+	if !isSuccess {
+		errs, _ := jsonparser.GetString([]byte(s), "error")
+		return nil, fmt.Errorf("failed to get open orders, error: %s", errs)
+	}
+
+	var res *ResponseForCancelStatus
+	if err := json.Unmarshal([]byte(s), res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
+}
+
+type ResponseForTransaction struct {
+	ID      int `json:"id"`
+	OrderID int `json:"order_id"`
+
+	Pair string `json:"pair"`
+	Side string `json:"side"`
+	Rate string `json:"rate"`
+
+	Fee         string `json:"fee"`
+	FeeCurrency string `json:"fee_currency"`
+
+	Liquidity string `json:"liquidity"`
+
+	Funds     Funds     `json:"funds"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type Funds struct {
+	BTC string `json:"btc"`
+	JPY string `json:"jpy"`
 }
 
 // Get Order Transactions
-func (a Order) Transactions() string {
-	return a.client.Request("GET", "api/exchange/orders/transactions", "")
+func (a Order) Transactions() ([]ResponseForTransaction, error) {
+	s := a.client.Request("GET", "api/exchange/orders/transactions", "")
+	isSuccess, err := jsonparser.GetBoolean([]byte(s), "success")
+	if err != nil {
+		return nil, err
+	}
+	if !isSuccess {
+		errs, _ := jsonparser.GetString([]byte(s), "error")
+		return nil, fmt.Errorf("failed to get open orders, error: %s", errs)
+	}
+
+	data, _, _, err := jsonparser.Get([]byte(s), "transactions")
+	if err != nil {
+		return nil, err
+	}
+
+	var res []ResponseForTransaction
+	if err := json.Unmarshal(data, &res); err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
