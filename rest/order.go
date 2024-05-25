@@ -153,13 +153,8 @@ type ResponseForTransaction struct {
 
 	Liquidity string `json:"liquidity"`
 
-	Funds     Funds     `json:"funds"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
-type Funds struct {
-	BTC string `json:"btc"`
-	JPY string `json:"jpy"`
+	Funds     map[string]interface{} `json:"funds"`
+	CreatedAt time.Time              `json:"created_at"`
 }
 
 // Get Order Transactions
