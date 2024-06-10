@@ -36,12 +36,12 @@ func (a BankAccount) Create(param string) (*Bank, error) {
 		return nil, err
 	}
 
-	var banks *Bank
-	if err := json.Unmarshal(data, banks); err != nil {
+	var banks Bank
+	if err := json.Unmarshal(data, &banks); err != nil {
 		return nil, err
 	}
 
-	return banks, nil
+	return &banks, nil
 }
 
 // Get account information.

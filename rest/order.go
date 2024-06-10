@@ -50,12 +50,12 @@ func (a Order) Create(op RequestForOrder) (*ResponseForOrder, error) {
 		return nil, fmt.Errorf("failed to create order, error: %s", errs)
 	}
 
-	var res *ResponseForOrder
-	if err := json.Unmarshal([]byte(s), res); err != nil {
+	var res ResponseForOrder
+	if err := json.Unmarshal([]byte(s), &res); err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	return &res, nil
 
 }
 
@@ -132,12 +132,12 @@ func (a Order) CancelStatus(id string) (*ResponseForCancelStatus, error) {
 		return nil, fmt.Errorf("failed to get open orders, error: %s", errs)
 	}
 
-	var res *ResponseForCancelStatus
-	if err := json.Unmarshal([]byte(s), res); err != nil {
+	var res ResponseForCancelStatus
+	if err := json.Unmarshal([]byte(s), &res); err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	return &res, nil
 }
 
 type ResponseForTransaction struct {

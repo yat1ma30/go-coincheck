@@ -25,12 +25,12 @@ type AccountBalance struct {
 // Make sure a balance.
 func (a Account) Balance() (*AccountBalance, error) {
 	s := a.client.Request("GET", "api/accounts/balance", "")
-	var balance *AccountBalance
-	if err := json.Unmarshal([]byte(s), balance); err != nil {
+	var balance AccountBalance
+	if err := json.Unmarshal([]byte(s), &balance); err != nil {
 		return nil, err
 	}
 
-	return balance, nil
+	return &balance, nil
 }
 
 type ExchangeFees struct {
@@ -52,10 +52,10 @@ type AccountInfo struct {
 // Get account information.
 func (a Account) Info() (*AccountInfo, error) {
 	s := a.client.Request("GET", "api/accounts", "")
-	var v *AccountInfo
-	if err := json.Unmarshal([]byte(s), v); err != nil {
+	var v AccountInfo
+	if err := json.Unmarshal([]byte(s), &v); err != nil {
 		return nil, err
 	}
 
-	return v, nil
+	return &v, nil
 }
